@@ -1,3 +1,4 @@
 /.env
 /arbitrage.csv
 /__pycache__
+/.venv
