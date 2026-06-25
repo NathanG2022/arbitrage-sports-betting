@@ -1,0 +1,1907 @@
+<title>Arbitrage Board</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#121826; --panel2:#0f1521; --line:#1e2738;
+    --ink:#e8edf6; --dim:#8893a7; --green:#3ddc97; --green-d:#0f3a2c;
+    --blue:#3b82f6; --chip:#1b2435;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1200px 600px at 80% -10%, #16203200, #0a0e14),
+      var(--bg);
+    color:var(--ink);
+    font:15px/1.4 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+    flex-wrap:wrap;margin-bottom:24px}
+  h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
+  h1 b{color:var(--green)}
+  .lead{color:var(--dim);font-size:13px;margin-top:6px;max-width:62ch}
+  .stats{display:flex;gap:10px;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:8px 12px;font-variant-numeric:tabular-nums}
+  .stat .n{font-weight:700;font-size:16px}
+  .stat .k{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+  .filters{display:flex;gap:8px;margin:0 0 18px}
+  .filters button{background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    padding:6px 14px;border-radius:999px;font-size:13px;cursor:pointer}
+  .filters button.on{color:var(--ink);border-color:var(--green);background:var(--green-d)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    margin-bottom:14px;overflow:hidden}
+  .ch{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:14px 16px;border-bottom:1px solid var(--line)}
+  .title{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .sport{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .match{font-weight:600;font-size:15px}
+  .sub{font-size:12px;color:var(--dim)}
+  .roi{flex:none;font-weight:700;font-size:14px;color:var(--green);
+    border:1px solid var(--green);background:var(--green-d);border-radius:999px;
+    padding:7px 14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .roi span{opacity:.5;margin:0 6px}
+
+  .legs{padding:6px 16px}
+  .leg{display:grid;grid-template-columns:150px 1fr 110px 120px 64px;gap:14px;
+    align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .leg:last-child{border-bottom:0}
+  .book{display:flex;align-items:center;gap:9px;min-width:0}
+  .chip{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;
+    font-size:11px;font-weight:700;color:#fff;
+    background:hsl(var(--h) 55% 42%)}
+  .bk{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+  .pick{font-weight:500}
+  .od{color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums}
+  .mkt{font-size:12px;color:var(--dim)}
+  .first{font-size:11px;color:var(--blue);border:1px solid #284058;border-radius:999px;padding:2px 9px}
+  .cell{display:flex;flex-direction:column;gap:2px;text-align:right;font-variant-numeric:tabular-nums}
+  .cell .lbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+  .cell .val{font-weight:600;font-size:14px}
+  .pay .val{color:var(--green)}
+  .bet{background:transparent;border:1px solid var(--blue);color:var(--blue);
+    border-radius:9px;padding:9px 0;font-weight:600;font-size:13px;cursor:pointer}
+  .bet:hover{background:#10243f}
+  .both{display:block;width:calc(100% - 32px);margin:0 16px 16px;
+    background:#0f1521;border:1px dashed #2a3650;color:var(--dim);
+    border-radius:10px;padding:11px;font-weight:600;cursor:pointer}
+  .both:hover{color:var(--ink);border-color:var(--green)}
+
+  .empty{color:var(--dim);text-align:center;padding:60px 0}
+  .foot{color:var(--dim);font-size:12px;margin-top:26px;border-top:1px solid var(--line);
+    padding-top:16px;line-height:1.6}
+  .foot b{color:#c2cce0}
+  @media(max-width:720px){
+    .leg{grid-template-columns:1fr;gap:6px;text-align:left}
+    .cell{flex-direction:row;justify-content:space-between;text-align:left}
+    .bet{width:100%}
+    .roi{font-size:12px}
+  }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Arbitrage <b>Board</b></h1>
+      <p class="lead">Every sportsbook, exchange, and DFS site the API covers — scanned on
+        moneyline / two-way markets for guaranteed-profit arbs. Kalshi rows are net of
+        trading fees. Prices move fast; confirm before placing.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">31</div><div class="k">Opportunities</div></div>
+      <div class="stat"><div class="n">14</div><div class="k">Books seen</div></div>
+      <div class="stat"><div class="n">403</div><div class="k">API credits left</div></div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="on" data-f="all">All</button>
+    <button data-f="odds">Sportsbooks &amp; exchanges</button>
+    <button data-f="kalshi">Kalshi (net of fees)</button>
+  </div>
+
+  
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Athletics vs San Francisco Giants</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 7:46PM UTC</span>
+        </div>
+        <div class="roi">+$125.86<span>·</span>11.18% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:341">B</span><span class="bk">Betfair</span></div>
+        <div class="sel">
+          <span class="pick">Athletics</span>
+          <span class="od">-119</span>
+          <span class="mkt">Mkt avg -168</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$611.77</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,125.86</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:14">B</span><span class="bk">Betsson</span></div>
+        <div class="sel">
+          <span class="pick">San Francisco Giants</span>
+          <span class="od">+190</span>
+          <span class="mkt">Mkt avg +136</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$388.23</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,125.87</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXLONDONMAYOR</span>
+          <span class="match">Who will win the 2028 London mayoral election?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$43.13<span>·</span>4.313% ROI · 10.132% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Sadiq Khan</span>
+          <span class="od">+316</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$264.32</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Georgia Gould</span>
+          <span class="od">+1233</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$82.60</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Mete Coban</span>
+          <span class="od">+1539</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$67.18</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">David Lammy</span>
+          <span class="od">+1900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$55.07</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Rosena Allin-Khan</span>
+          <span class="od">+1134</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$89.21</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">James Cleverly</span>
+          <span class="od">+1150</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$88.11</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Laila Cunningham</span>
+          <span class="od">+284</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$286.34</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Zack Polanski</span>
+          <span class="od">+1539</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$67.18</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXNEWROLEGS</span>
+          <span class="match">Who will be the next CEO of Goldman Sachs?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$37.35<span>·</span>3.735% ROI · 7.527% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">John Waldron</span>
+          <span class="od">-177</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$688.17</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Marc Nachmann</span>
+          <span class="od">+1900</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$53.76</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Dan Dees</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$64.52</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Ashok Varadhan</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$64.52</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Kim Posnett</span>
+          <span class="od">+1328</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$75.27</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Matt McClure</span>
+          <span class="od">+1900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$53.76</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXRANKLISTGOOGLESEARCH2</span>
+          <span class="match">#2 Most Searched Person on Google in 2026?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$36.47<span>·</span>3.647% ROI · 9.89% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Donald Trump</span>
+          <span class="od">+809</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$120.88</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Kamala Harris</span>
+          <span class="od">+1566</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Volodymyr Zelenskyy</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Joe Biden</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Taylor Swift</span>
+          <span class="od">+1011</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$98.90</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Elon Musk</span>
+          <span class="od">+1328</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$76.92</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Vladimir Putin</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Timothée Chalamet</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Billie Eilish</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Sam Altman</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$65.93</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Bad Bunny</span>
+          <span class="od">+354</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$241.76</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXFEDCOMBO</span>
+          <span class="match">July 2026 Fed Combo: Rate and Dissents</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$36.21<span>·</span>3.621% ROI · 7.527% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Federal Funds Rate Decision: No change, Dissents: 0</span>
+          <span class="od">-112</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$569.89</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Federal Funds Rate Decision: No change, Dissents: &gt;0</span>
+          <span class="od">+177</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$387.10</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Federal Funds Rate Decision: 25bp cut, Dissents: 0</span>
+          <span class="od">+4900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$21.51</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Federal Funds Rate Decision: 25bp cut, Dissents: &gt;0</span>
+          <span class="od">+4900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$21.51</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXTRUMPPHOTO</span>
+          <span class="match">How many days will Trump be photographed this week? (6/22-6/28) </span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$29.75<span>·</span>2.975% ROI · 7.527% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">4</span>
+          <span class="od">+3233</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$32.26</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">5</span>
+          <span class="od">+426</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$204.30</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">6</span>
+          <span class="od">+104</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$526.88</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">7</span>
+          <span class="od">+354</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$236.56</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXHOUSERACE</span>
+          <span class="match">MN-04 House winner?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$23.67<span>·</span>2.367% ROI · 3.199% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Democratic party</span>
+          <span class="od">-1198</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$952.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Republican party</span>
+          <span class="od">+2073</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$47.47</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXPRESTURKEYR1</span>
+          <span class="match">Who will win the first round of the next Turkish presidential election?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$22.05<span>·</span>2.205% ROI · 5.374% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Recep Tayyip Erdoğan</span>
+          <span class="od">-222</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$727.08</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Ekrem İmamoğlu</span>
+          <span class="od">+400</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$210.75</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Mansur Yavaş</span>
+          <span class="od">+1594</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$62.17</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXTHEGAMBIAPRES</span>
+          <span class="match">Who will win the next Gambian presidential election?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$20.75<span>·</span>2.075% ROI · 5.263% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Adama Barrow</span>
+          <span class="od">-233</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$736.84</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Ousainou Darboe</span>
+          <span class="od">+566</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$157.89</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Essa Faal</span>
+          <span class="od">+1900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$52.63</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Mama Kandeh</span>
+          <span class="od">+1900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$52.63</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">basketball_wnba</span>
+          <span class="match">Connecticut Sun vs Washington Mystics</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 11:30PM UTC</span>
+        </div>
+        <div class="roi">+$18.63<span>·</span>1.83% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Connecticut Sun</span>
+          <span class="od">+194</span>
+          <span class="mkt">Mkt avg +167</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$346.47</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,018.62</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:92">1</span><span class="bk">1xBet</span></div>
+        <div class="sel">
+          <span class="pick">Washington Mystics</span>
+          <span class="od">-179</span>
+          <span class="mkt">Mkt avg -219</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$653.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,018.63</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXFLPRIMARY</span>
+          <span class="match">FL-02 Democratic nominee?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$12.09<span>·</span>1.209% ROI · 6.383% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Yen Bailey</span>
+          <span class="od">+177</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$382.98</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Brice Barnes</span>
+          <span class="od">+488</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$180.85</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Amanda Green</span>
+          <span class="od">+257</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$297.87</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Nic Zateslo</span>
+          <span class="od">+1328</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$74.47</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Al Lawson</span>
+          <span class="od">+1566</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$63.83</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXMUSICREPORT</span>
+          <span class="match">Top U.S. Selling Album (Physical and Digital Sales Combined): 2026</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$12.07<span>·</span>1.207% ROI · 5.263% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">The Life of a Showgirl</span>
+          <span class="od">+2400</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$42.11</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">I’m the Problem</span>
+          <span class="od">+9900</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">SOS</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">KPop Demon Hunters</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">DeBÍ TiRAR MáS FOToS</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">GNX</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Short n’ Sweet</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">One Thing at a Time</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">ICEMAN</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">you seem pretty sad for a girl so in love</span>
+          <span class="od">+900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$105.26</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">The Fall Off</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">ARIRANG</span>
+          <span class="od">-163</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$652.63</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Kiss All the Time. Disco, Occasionally</span>
+          <span class="od">+1900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$52.63</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">The Great Divide</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Dandelion</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">The Art Of Loving</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Octane</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Thriller</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.53</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Boston Red Sox vs New York Yankees</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 11:11PM UTC</span>
+        </div>
+        <div class="roi">+$11.47<span>·</span>1.13% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Boston Red Sox</span>
+          <span class="od">+133</span>
+          <span class="mkt">Mkt avg +124</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$434.11</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,011.48</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">New York Yankees</span>
+          <span class="od">-127</span>
+          <span class="mkt">Mkt avg -147</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$565.89</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,011.47</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Arizona Diamondbacks vs St. Louis Cardinals</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 11:46PM UTC</span>
+        </div>
+        <div class="roi">+$10.20<span>·</span>1.01% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:106">P</span><span class="bk">ProphetX</span></div>
+        <div class="sel">
+          <span class="pick">Arizona Diamondbacks</span>
+          <span class="od">+125</span>
+          <span class="mkt">Mkt avg +114</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$448.98</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.21</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:194">B</span><span class="bk">BetOpenly</span></div>
+        <div class="sel">
+          <span class="pick">St. Louis Cardinals</span>
+          <span class="od">-120</span>
+          <span class="mkt">Mkt avg -134</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$551.02</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.20</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Cincinnati Reds vs Pittsburgh Pirates</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 10:41PM UTC</span>
+        </div>
+        <div class="roi">+$10.16<span>·</span>1.01% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Cincinnati Reds</span>
+          <span class="od">+186</span>
+          <span class="mkt">Mkt avg +167</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$353.20</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.15</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Pittsburgh Pirates</span>
+          <span class="od">-178</span>
+          <span class="mkt">Mkt avg -211</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$646.80</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.17</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Baltimore Orioles vs Washington Nationals</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 11:06PM UTC</span>
+        </div>
+        <div class="roi">+$10.02<span>·</span>0.99% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Baltimore Orioles</span>
+          <span class="od">-122</span>
+          <span class="mkt">Mkt avg -144</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$555.06</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.03</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:92">1</span><span class="bk">1xBet</span></div>
+        <div class="sel">
+          <span class="pick">Washington Nationals</span>
+          <span class="od">+127</span>
+          <span class="mkt">Mkt avg +115</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$444.94</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.01</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">New York Mets vs Philadelphia Phillies</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 11:11PM UTC</span>
+        </div>
+        <div class="roi">+$10.02<span>·</span>0.99% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:92">1</span><span class="bk">1xBet</span></div>
+        <div class="sel">
+          <span class="pick">New York Mets</span>
+          <span class="od">+127</span>
+          <span class="mkt">Mkt avg +118</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$444.94</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.01</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Philadelphia Phillies</span>
+          <span class="od">-122</span>
+          <span class="mkt">Mkt avg -145</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$555.06</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,010.03</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">basketball_wnba</span>
+          <span class="match">Los Angeles Sparks vs Toronto Tempo</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 11:00PM UTC</span>
+        </div>
+        <div class="roi">+$9.90<span>·</span>0.98% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:16">8</span><span class="bk">888sport</span></div>
+        <div class="sel">
+          <span class="pick">Los Angeles Sparks</span>
+          <span class="od">+100</span>
+          <span class="mkt">Mkt avg -109</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$504.95</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,009.90</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Toronto Tempo</span>
+          <span class="od">+104</span>
+          <span class="mkt">Mkt avg -110</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$495.05</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,009.90</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXCS2GAME</span>
+          <span class="match">CYBERSHOKE Prospects vs. The Huns Esports</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$7.03<span>·</span>0.703% ROI · 4.167% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">CYBERSHOKE Prospects</span>
+          <span class="od">+170</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$385.42</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">The Huns Esports</span>
+          <span class="od">-143</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$614.58</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Boston Red Sox vs New York Yankees</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 11:11PM UTC</span>
+        </div>
+        <div class="roi">+$6.75<span>·</span>0.67% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Boston Red Sox</span>
+          <span class="od">+113</span>
+          <span class="mkt">Mkt avg -102</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$472.65</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,006.74</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:311">F</span><span class="bk">FanDuel</span></div>
+        <div class="sel">
+          <span class="pick">New York Yankees</span>
+          <span class="od">-110</span>
+          <span class="mkt">Mkt avg -118</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$527.35</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,006.76</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXNEXTMANAGERMLB</span>
+          <span class="match">Boston: Next Manager</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$5.51<span>·</span>0.551% ROI · 6.383% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">David Ortiz</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Nomar Garciaparra</span>
+          <span class="od">+9900</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Pedro Martinez</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Alex Rodriguez</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Dustin Pedroia</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Kevin Youkilis</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Brad Ausmus</span>
+          <span class="od">+2400</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$42.55</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Brandon Hyde</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Jason Varitek</span>
+          <span class="od">+3233</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$31.91</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Jeff Banister</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Rocco Baldelli</span>
+          <span class="od">+426</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$202.13</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Daniel Nava</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Ron Gardenhire</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Sandy Alomar Jr.</span>
+          <span class="od">+9900</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$10.64</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Chad Tracy</span>
+          <span class="od">+222</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$329.79</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">David Ross</span>
+          <span class="od">+1328</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$74.47</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Andrew Bailey</span>
+          <span class="od">+2400</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$42.55</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Mike Lowell</span>
+          <span class="od">+3233</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$31.91</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Torey Lovullo</span>
+          <span class="od">+733</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$127.66</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">SENATECA</span>
+          <span class="match">California Senate winner? (2028)</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$5.46<span>·</span>0.546% ROI · 1.729% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Democratic party</span>
+          <span class="od">-899</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$915.56</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Republican party</span>
+          <span class="od">+1104</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$84.44</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXTRUMPAGCOUNT</span>
+          <span class="match">How many Attorneys General will Trump have?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$5.36<span>·</span>0.536% ROI · 5.042% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">2</span>
+          <span class="od">+104</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$514.71</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">3</span>
+          <span class="od">+244</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$304.62</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">4</span>
+          <span class="od">+920</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$102.94</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">5</span>
+          <span class="od">+1251</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$77.73</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="kalshi">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">KXCALIEUTENANTGOV</span>
+          <span class="match">California Lieutenant Governor winner?</span>
+          <span class="sub">Multi-outcome (Kalshi)</span>
+        </div>
+        <div class="roi">+$4.84<span>·</span>0.484% ROI · 1.112% gross</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Fiona Ma</span>
+          <span class="od">-1823</span>
+          
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$958.54</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Gloria Romero</span>
+          <span class="od">+2339</span>
+          <span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$41.46</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,000.00</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">basketball_wnba</span>
+          <span class="match">Atlanta Dream vs Golden State Valkyries</span>
+          <span class="sub">Moneyline · Sat 6/27 @ 2:00AM UTC</span>
+        </div>
+        <div class="roi">+$4.78<span>·</span>0.48% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:155">N</span><span class="bk">Novig</span></div>
+        <div class="sel">
+          <span class="pick">Atlanta Dream</span>
+          <span class="od">+106</span>
+          <span class="mkt">Mkt avg -114</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$487.76</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.79</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Golden State Valkyries</span>
+          <span class="od">-104</span>
+          <span class="mkt">Mkt avg -113</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$512.24</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.78</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Detroit Tigers vs Houston Astros</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 10:41PM UTC</span>
+        </div>
+        <div class="roi">+$4.60<span>·</span>0.46% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Detroit Tigers</span>
+          <span class="od">-108</span>
+          <span class="mkt">Mkt avg -115</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$521.62</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.60</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:194">B</span><span class="bk">BetOpenly</span></div>
+        <div class="sel">
+          <span class="pick">Houston Astros</span>
+          <span class="od">+110</span>
+          <span class="mkt">Mkt avg -101</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$478.38</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.60</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Arizona Diamondbacks vs Tampa Bay Rays</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 11:11PM UTC</span>
+        </div>
+        <div class="roi">+$4.47<span>·</span>0.45% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Arizona Diamondbacks</span>
+          <span class="od">+113</span>
+          <span class="mkt">Mkt avg -102</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$471.58</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.47</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:335">PP</span><span class="bk">Paddy Power</span></div>
+        <div class="sel">
+          <span class="pick">Tampa Bay Rays</span>
+          <span class="od">-111</span>
+          <span class="mkt">Mkt avg -119</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$528.42</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.47</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Athletics vs Los Angeles Angels</span>
+          <span class="sub">Moneyline · Sat 6/27 @ 1:39AM UTC</span>
+        </div>
+        <div class="roi">+$4.47<span>·</span>0.45% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:335">PP</span><span class="bk">Paddy Power</span></div>
+        <div class="sel">
+          <span class="pick">Athletics</span>
+          <span class="od">-111</span>
+          <span class="mkt">Mkt avg -121</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$528.42</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.47</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Los Angeles Angels</span>
+          <span class="od">+113</span>
+          <span class="mkt">Mkt avg -101</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$471.58</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,004.47</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Texas Rangers vs Toronto Blue Jays</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 11:08PM UTC</span>
+        </div>
+        <div class="roi">+$3.76<span>·</span>0.37% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:194">B</span><span class="bk">BetOpenly</span></div>
+        <div class="sel">
+          <span class="pick">Texas Rangers</span>
+          <span class="od">+132</span>
+          <span class="mkt">Mkt avg +122</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$432.66</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,003.77</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:200">M</span><span class="bk">Matchbook</span></div>
+        <div class="sel">
+          <span class="pick">Toronto Blue Jays</span>
+          <span class="od">-130</span>
+          <span class="mkt">Mkt avg -143</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$567.34</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,003.76</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Philadelphia Phillies vs Washington Nationals</span>
+          <span class="sub">Moneyline · Thu 6/25 @ 10:46PM UTC</span>
+        </div>
+        <div class="roi">+$2.88<span>·</span>0.29% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:244">K</span><span class="bk">Kalshi</span></div>
+        <div class="sel">
+          <span class="pick">Philadelphia Phillies</span>
+          <span class="od">-163</span>
+          <span class="mkt">Mkt avg -179</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$621.56</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,002.89</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:64">TB</span><span class="bk">theScore Bet</span></div>
+        <div class="sel">
+          <span class="pick">Washington Nationals</span>
+          <span class="od">+165</span>
+          <span class="mkt">Mkt avg +151</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$378.44</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,002.87</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+    <article class="card" data-src="odds">
+      <header class="ch">
+        <div class="title">
+          <span class="sport">baseball_mlb</span>
+          <span class="match">Chicago Cubs vs Milwaukee Brewers</span>
+          <span class="sub">Moneyline · Fri 6/26 @ 11:46PM UTC</span>
+        </div>
+        <div class="roi">+$2.03<span>·</span>0.2% ROI</div>
+      </header>
+      <div class="legs">
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:311">F</span><span class="bk">FanDuel</span></div>
+        <div class="sel">
+          <span class="pick">Chicago Cubs</span>
+          <span class="od">+215</span>
+          <span class="mkt">Mkt avg +194</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$318.11</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,002.05</span></div>
+        <button class="bet">Bet</button>
+      </div>
+      <div class="leg">
+        <div class="book"><span class="chip" style="--h:344">P</span><span class="bk">Polymarket</span></div>
+        <div class="sel">
+          <span class="pick">Milwaukee Brewers</span>
+          <span class="od">-213</span>
+          <span class="mkt">Mkt avg -249</span><span class="first">Bet First</span>
+        </div>
+        <div class="cell"><span class="lbl">Bet size</span><span class="val">$681.89</span></div>
+        <div class="cell pay"><span class="lbl">Payout</span><span class="val">$1,002.03</span></div>
+        <button class="bet">Bet</button>
+      </div></div>
+      <button class="both">Place Both</button>
+    </article>
+
+  <p class="foot">Generated <b>2026-06-25 21:25 UTC</b>. Snapshot — not live. Moneyline / two-way only
+    (player props like the ones in pro tools need the per-event props endpoints, not yet wired).
+    Re-run <b>python generate_report.py</b> to refresh.</p>
+</div>
+
+<script>
+  const btns=[...document.querySelectorAll('.filters button')];
+  btns.forEach(b=>b.onclick=()=>{
+    btns.forEach(x=>x.classList.toggle('on',x===b));
+    const f=b.dataset.f;
+    document.querySelectorAll('.card').forEach(c=>{
+      c.style.display=(f==='all'||c.dataset.src===f)?'':'none';
+    });
+  });
+</script>

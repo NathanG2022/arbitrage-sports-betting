@@ -71,6 +71,48 @@ def load_notifiers():
     return notifiers
 
 
+def discord_from_env(env_var: str):
+    """Return a DiscordNotifier for the webhook URL in `env_var`, or None."""
+    url = os.getenv(env_var)
+    if not url:
+        return None
+    return DiscordNotifier(url)
+
+
+def _arb_line(arb: dict) -> str:
+    """Compact one-line summary of an arb for a digest message."""
+    if arb.get("legs"):
+        legs = " / ".join(f"{l['name']} {l['odds']:+d} ({l['book']})"
+                          if isinstance(l.get("odds"), int)
+                          else f"{l['name']} {l['odds']} ({l['book']})"
+                          for l in arb["legs"])
+    else:
+        legs = (f"{arb['team_1']} {arb['team_1_odds']:+d} ({arb['team_1_book']}) / "
+                f"{arb['team_2']} {arb['team_2_odds']:+d} ({arb['team_2_book']})")
+    return f"`{arb['roi']:+.2f}%` **{arb['match']}** — {legs}"
+
+
+def send_digest(notifier, arbs, header: str):
+    """Post arbs to a notifier as compact digest messages, chunked under
+    Discord's 2000-char limit. Returns the number of arbs sent."""
+    if notifier is None or not arbs:
+        return 0
+
+    lines = [_arb_line(a) for a in arbs]
+    chunk, length = [], 0
+    first = True
+    for line in lines:
+        # +1 for the newline join
+        if length + len(line) + 1 > 1800 and chunk:
+            notifier.send(header if first else f"{header} (cont.)", "\n".join(chunk))
+            chunk, length, first = [], 0, False
+        chunk.append(line)
+        length += len(line) + 1
+    if chunk:
+        notifier.send(header if first else f"{header} (cont.)", "\n".join(chunk))
+    return len(arbs)
+
+
 def format_arb(arb: dict):
     """Build a (title, body) pair from an arbitrage opportunity dict.
 
