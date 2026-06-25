@@ -8,6 +8,12 @@ API_KEY = os.getenv("ODDS_API_KEY")
 
 BASE_URL = "https://api.the-odds-api.com/v4"
 
+# Comma-separated Odds API region codes. Defaults to traditional US sportsbooks.
+# Toggle to DFS + prediction markets only with REGIONS="us_dfs,us_ex".
+#   us_dfs -> DFS sites: prizepicks, underdog, pick6, betr_us_dfs
+#   us_ex  -> US exchanges / prediction markets: kalshi, polymarket, novig, prophetx, betopenly
+REGIONS = os.getenv("REGIONS", "us")
+
 
 def get_odds(sport_key: str):
     """
@@ -20,7 +26,7 @@ def get_odds(sport_key: str):
     url = f"{BASE_URL}/sports/{sport_key}/odds"
     params = {
         "apiKey": API_KEY,
-        "regions": "us",
+        "regions": REGIONS,
         "markets": "h2h",
         "oddsFormat": "american",
     }
