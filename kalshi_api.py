@@ -111,9 +111,11 @@ def to_odds_api_format(events: list) -> list:
         outcomes = []
         for m in markets:
             ask = _to_float(m.get("yes_ask_dollars"))
-            dec = price_to_decimal(ask)
-            if dec is None:
+            # Exclude degenerate prices: 0 (no odds) and >=1 (decimal_to_american
+            # divides by decimal-1, which is 0 at prob=1.0).
+            if ask is None or ask <= 0 or ask >= 1:
                 continue
+            dec = price_to_decimal(ask)
             name = m.get("yes_sub_title") or m.get("title") or m.get("ticker")
             outcomes.append({"name": name, "price": decimal_to_american(dec)})
 
